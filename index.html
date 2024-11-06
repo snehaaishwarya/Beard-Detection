@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Webcam Feed</title>
+    <style>
+        .container {
+            display: flex;
+            align-items: center;
+        }
+        .video-container, .image-container, .results-container {
+            margin: 10px;
+        }
+        .image-container img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+        .results-container {
+            max-width: 300px;
+        }
+        .results-container div {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Live Webcam Feed</h1>
+    <div class="container">
+        <div class="video-container">
+            <img src="{{ url_for('video_feed') }}" width="640" height="480" />
+            <button id="captureButton">Capture</button>
+            <button id="analyzeButton">Analyze</button>
+        </div>
+        <div class="image-container">
+            <img id="capturedImage" src="" alt="Captured Image" />
+        </div>
+        <div class="results-container" id="resultsContainer">
+            <!-- Analysis results will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('captureButton').addEventListener('click', function() {
+            fetch('/capture', { method: 'POST' })
+                .then(response => response.blob())
+                .then(blob => {
+                    const imageUrl = URL.createObjectURL(blob);
+                    document.getElementById('capturedImage').src = imageUrl;
+                });
+        });
+
+        document.getElementById('analyzeButton').addEventListener('click', function() {
+            fetch('/analyze', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    const resultsContainer = document.getElementById('resultsContainer');
+                    resultsContainer.innerHTML = ''; // Clear previous results
+                    data.forEach(face => {
+                        const faceDiv = document.createElement('div');
+                        faceDiv.innerHTML = `
+                            <h3>Face Analysis</h3>
+                            <p>Beard: ${face.Beard || 'Not available'}</p>
+                            <p>Mustache: ${face.Mustache || 'Not available'}</p>
+                        `;
+                        resultsContainer.appendChild(faceDiv);
+                    });
+                });
+        });
+    </script>
+</body>
+</html>
